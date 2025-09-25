@@ -48,14 +48,12 @@
         <input
           type="text"
           class="add-form-name"
-          placeholder="Введите ваше имя"
-        />
+          placeholder="Введите ваше имя" />
         <textarea
           type="textarea"
           class="add-form-text"
           placeholder="Введите ваш коментарий"
-          rows="4"
-        ></textarea>
+          rows="4"></textarea>
         <div class="add-form-row">
           <button class="add-form-button">Написать</button>
         </div>
@@ -64,8 +62,132 @@
   </body>
 
   <script>
-    "use strict";
-    // Код писать здесь
-    console.log("It works!");
+    document.addEventListener('DOMContentLoaded', () => {
+      // Находим элементы формы и список комментариев
+      const nameInput = document.querySelector('.add-form-name');
+      const commentInput = document.querySelector('.add-form-text');
+      const addButton = document.querySelector('.add-form-button');
+      const commentsList = document.querySelector('.comments');
+
+      // Функция форматирования даты
+      function formatDate(d = new Date()) {
+        const pad = n => String(n).padStart(2, '0');
+        const day = pad(d.getDate());
+        const month = pad(d.getMonth() + 1);
+        const year = String(d.getFullYear()).slice(-2);
+        const hrs = pad(d.getHours());
+        const mins = pad(d.getMinutes());
+        return `${day}.${month}.${year} ${hrs}:${mins}`;
+      }
+
+      // Если текст вводится класс error не работает - для валидации
+      nameInput.addEventListener('input', () => {
+        nameInput.classList.remove('error');
+      });
+      commentInput.addEventListener('input', () => {
+        commentInput.classList.remove('error');
+      });
+
+      // Обработчик кнопки "Написать"
+      addButton.addEventListener('click', () => {
+        const name = nameInput.value.trim();
+        const comment = commentInput.value.trim();
+        let hasError = false; // флаг ошибок
+
+        // Валидация
+        // Проверка наличия имени
+        if (!name) {
+          nameInput.value = '';
+          nameInput.placeholder = 'Введите имя!';
+          nameInput.classList.add('error'); // placeholder красный
+          hasError = true;
+        } else {
+          nameInput.classList.remove('error');
+          nameInput.placeholder = 'Введите ваше имя';
+        }
+
+        // Проверка наличия коммента
+        if (!comment) {
+          commentInput.value = '';
+          commentInput.placeholder = 'Введите комментарий!';
+          commentInput.classList.add('error'); // placeholder красный
+          hasError = true;
+        } else {
+          commentInput.classList.remove('error');
+          commentInput.placeholder = 'Введите ваш комментарий';
+        }
+
+        if (hasError) return; // останавливаем добавление
+
+        // Создание нового комментария
+        const li = document.createElement('li');
+        li.className = 'comment';
+
+        // Header (имя + дата)
+        const header = document.createElement('div');
+        header.className = 'comment-header';
+        const nameDiv = document.createElement('div');
+        nameDiv.textContent = name;
+        const dateDiv = document.createElement('div');
+        dateDiv.textContent = formatDate();
+        header.appendChild(nameDiv);
+        header.appendChild(dateDiv);
+
+        // Body (текст комментария)
+        const body = document.createElement('div');
+        body.className = 'comment-body';
+        const textDiv = document.createElement('div');
+        textDiv.className = 'comment-text';
+        textDiv.textContent = comment;
+        body.appendChild(textDiv);
+
+        // Footer (лайки)
+        const footer = document.createElement('div');
+        footer.className = 'comment-footer';
+        const likes = document.createElement('div');
+        likes.className = 'likes';
+        const likesCounter = document.createElement('span');
+        likesCounter.className = 'likes-counter';
+        likesCounter.textContent = '0';
+        const likeButton = document.createElement('button');
+        likeButton.className = 'like-button';
+        likeButton.type = 'button';
+
+        // Лайк-кнопка
+        likeButton.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const liked = likeButton.classList.contains('-active-like');
+          let count = parseInt(likesCounter.textContent || '0', 10);
+          if (liked) {
+            count = Math.max(0, count - 1);
+            likeButton.classList.remove('-active-like');
+          } else {
+            count += 1;
+            likeButton.classList.add('-active-like');
+          }
+          likesCounter.textContent = String(count);
+        });
+        
+        // Собираем блок лайков
+        likes.appendChild(likesCounter);
+        likes.appendChild(likeButton);
+        footer.appendChild(likes);
+
+        // Собираем комменты
+        li.appendChild(header);
+        li.appendChild(body);
+        li.appendChild(footer);
+
+        // Добавляем в список комментов
+        commentsList.appendChild(li);
+
+        // Очищаем поля ввода
+        nameInput.value = '';
+        commentInput.value = '';
+        nameInput.classList.remove('error');
+        commentInput.classList.remove('error');
+      });
+    });
   </script>
+
 </html>

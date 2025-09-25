@@ -135,3 +135,9 @@ body {
   .add-form-button:hover {
     opacity: 0.9;
   }
+
+  /* красный цвет placeholder при ошибке */
+  input.error::placeholder,
+  textarea.error::placeholder {
+  color: #ff4d4f;
+}

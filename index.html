@@ -87,6 +87,50 @@
       commentInput.addEventListener('input', () => {
         commentInput.classList.remove('error');
       });
+        
+      // =============. РЕНДЕРИМ ЧЕРЕЗ ШАБЛОННУЮ СТРОКУ.  =============
+      function renderComment(name, comment, date = formatDate()) {
+        return `
+          <li class="comment">
+            <div class="comment-header">
+              <div>${name}</div>
+              <div>${date}</div>
+            </div>
+            <div class="comment-body">
+              <div class="comment-text">${comment}</div>
+            </div>
+            <div class="comment-footer">
+              <div class="likes">
+                <span class="likes-counter">0</span>
+                <button class="like-button" type="button"></button>
+              </div>
+            </div>
+          </li>
+        `;
+      }
+
+      // Слушаем все клики лайков внутри списка
+      commentsList.addEventListener('click', (e) => {
+        if (e.target.classList.contains('like-button')) {
+          const likeButton = e.target;
+          const likesCounter = likeButton.closest('.likes').querySelector('.likes-counter');
+
+          let count = parseInt(likesCounter.textContent, 10);
+          const liked = likeButton.classList.contains('-active-like');
+
+          // Если лайк уже есть то убираем его
+          if (liked) {
+            count = Math.max(0, count - 1);
+            likeButton.classList.remove('-active-like');
+          } else {
+            // Если лайка еще нет то добавляем лайк
+            count++;
+            likeButton.classList.add('-active-like');
+          }
+
+          likesCounter.textContent = String(count);
+        }
+      });
 
       // Обработчик кнопки "Написать"
       addButton.addEventListener('click', () => {
@@ -119,67 +163,72 @@
 
         if (hasError) return; // останавливаем добавление
 
-        // Создание нового комментария
-        const li = document.createElement('li');
-        li.className = 'comment';
 
-        // Header (имя + дата)
-        const header = document.createElement('div');
-        header.className = 'comment-header';
-        const nameDiv = document.createElement('div');
-        nameDiv.textContent = name;
-        const dateDiv = document.createElement('div');
-        dateDiv.textContent = formatDate();
-        header.appendChild(nameDiv);
-        header.appendChild(dateDiv);
+        // =============== СТАРЫЙ РУЧНОЙ ВАРИАНТ +===============
+        // // Создание нового комментария
+        // const li = document.createElement('li');
+        // li.className = 'comment';
 
-        // Body (текст комментария)
-        const body = document.createElement('div');
-        body.className = 'comment-body';
-        const textDiv = document.createElement('div');
-        textDiv.className = 'comment-text';
-        textDiv.textContent = comment;
-        body.appendChild(textDiv);
+        // // Header (имя + дата)
+        // const header = document.createElement('div');
+        // header.className = 'comment-header';
+        // const nameDiv = document.createElement('div');
+        // nameDiv.textContent = name;
+        // const dateDiv = document.createElement('div');
+        // dateDiv.textContent = formatDate();
+        // header.appendChild(nameDiv);
+        // header.appendChild(dateDiv);
 
-        // Footer (лайки)
-        const footer = document.createElement('div');
-        footer.className = 'comment-footer';
-        const likes = document.createElement('div');
-        likes.className = 'likes';
-        const likesCounter = document.createElement('span');
-        likesCounter.className = 'likes-counter';
-        likesCounter.textContent = '0';
-        const likeButton = document.createElement('button');
-        likeButton.className = 'like-button';
-        likeButton.type = 'button';
+        // // Body (текст комментария)
+        // const body = document.createElement('div');
+        // body.className = 'comment-body';
+        // const textDiv = document.createElement('div');
+        // textDiv.className = 'comment-text';
+        // textDiv.textContent = comment;
+        // body.appendChild(textDiv);
 
-        // Лайк-кнопка
-        likeButton.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const liked = likeButton.classList.contains('-active-like');
-          let count = parseInt(likesCounter.textContent || '0', 10);
-          if (liked) {
-            count = Math.max(0, count - 1);
-            likeButton.classList.remove('-active-like');
-          } else {
-            count += 1;
-            likeButton.classList.add('-active-like');
-          }
-          likesCounter.textContent = String(count);
-        });
+        // // Footer (лайки)
+        // const footer = document.createElement('div');
+        // footer.className = 'comment-footer';
+        // const likes = document.createElement('div');
+        // likes.className = 'likes';
+        // const likesCounter = document.createElement('span');
+        // likesCounter.className = 'likes-counter';
+        // likesCounter.textContent = '0';
+        // const likeButton = document.createElement('button');
+        // likeButton.className = 'like-button';
+        // likeButton.type = 'button';
+
+        // // Лайк-кнопка
+        // likeButton.addEventListener('click', (e) => {
+        //   e.stopPropagation();
+        //   const liked = likeButton.classList.contains('-active-like');
+        //   let count = parseInt(likesCounter.textContent || '0', 10);
+        //   if (liked) {
+        //     count = Math.max(0, count - 1);
+        //     likeButton.classList.remove('-active-like');
+        //   } else {
+        //     count += 1;
+        //     likeButton.classList.add('-active-like');
+        //   }
+        //   likesCounter.textContent = String(count);
+        // });
         
-        // Собираем блок лайков
-        likes.appendChild(likesCounter);
-        likes.appendChild(likeButton);
-        footer.appendChild(likes);
+        // // Собираем блок лайков
+        // likes.appendChild(likesCounter);
+        // likes.appendChild(likeButton);
+        // footer.appendChild(likes);
 
-        // Собираем комменты
-        li.appendChild(header);
-        li.appendChild(body);
-        li.appendChild(footer);
+        // // Собираем комменты
+        // li.appendChild(header);
+        // li.appendChild(body);
+        // li.appendChild(footer);
 
-        // Добавляем в список комментов
-        commentsList.appendChild(li);
+        // // Добавляем в список комментов
+        // commentsList.appendChild(li);
+
+        // Добавляем новый комментарий в список (через шаблон)
+        commentsList.innerHTML += renderComment(name, comment);
 
         // Очищаем поля ввода
         nameInput.value = '';

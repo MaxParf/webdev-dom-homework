@@ -74,6 +74,16 @@
         commentInput.classList.remove('error');
       });
 
+      // Заменяем опасные символы чтобы отображать их в виде текста
+      function safeSymbol(text) {
+        return text
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
       // функция ркндера 
       function renderComments() {
         commentsList.innerHTML = comments
@@ -105,7 +115,21 @@
 
         // После перерисовки навешиваем слушатели на каждую кнопку лайка
         document.querySelectorAll('.like-button').forEach((button, index) => {
-          button.addEventListener('click', () => toggleLike(index));
+          button.addEventListener('click', event => {
+            event.stopPropagation(); // остановка всплатия или провала
+            toggleLike(index);
+          });
+        });
+
+        // Добавим обработчик события на коммент
+        document.querySelectorAll('.comment').forEach(commentEl => {
+          commentEl.addEventListener('click', () => {
+            const i = commentEl.dataset.index;
+            const clicked = comments[i];
+            // добавим ">"
+            commentInput.value = `> ${clicked.text}\n${clicked.name}, `;
+            nameInput.focus();
+          });
         });
       }
 
@@ -121,8 +145,9 @@
 
       // Новые комменты
       addButton.addEventListener('click', () => {
-        const name = nameInput.value.trim();
-        const comment = commentInput.value.trim();
+        // применяем функцию защиты от опасных символов в input
+        const name = safeSymbol(nameInput.value.trim());
+        const comment = safeSymbol(commentInput.value.trim());
         // флаг ошибок
         let hasError = false;
 

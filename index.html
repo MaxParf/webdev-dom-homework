@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>Проект "Комменты"</title>
@@ -13,190 +13,18 @@
 
       <!-- Форма добавления нового комментария -->
       <div class="add-form">
-        <input
-          type="text"
-          class="add-form-name"
-          placeholder="Введите ваше имя" />
+        <input type="text" class="add-form-name" placeholder="Введите ваше имя" />
         <textarea
           type="textarea"
           class="add-form-text"
           placeholder="Введите ваш коментарий"
-          rows="4"></textarea>
+          rows="4"
+        ></textarea>
         <div class="add-form-row">
           <button class="add-form-button">Написать</button>
         </div>
       </div>
     </div>
+    <script type="module" src="js/index.js"></script>
   </body>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Добавляем массив comments, для комментарив, новые ключи для лайков и их состоянии.
-      const comments = [
-        {
-          name: 'Глеб Фокин',
-          date: '12.02.22 12:18',
-          text: 'Это будет первый комментарий на этой странице',
-          likes: 3,
-          isLiked: false, // булево значение: лайкнут или нет
-        },
-        {
-          name: 'Варвара Н.',
-          date: '13.02.22 19:22',
-          text: 'Мне нравится как оформлена эта страница! ❤',
-          likes: 75,
-          isLiked: true,
-        },
-      ];
-
-      // Находим элементы формы и список комментариев
-      const nameInput = document.querySelector('.add-form-name');
-      const commentInput = document.querySelector('.add-form-text');
-      const addButton = document.querySelector('.add-form-button');
-      const commentsList = document.querySelector('.comments');
-
-      // Функция форматирования даты
-      function formatDate(d = new Date()) {
-        const pad = n => String(n).padStart(2, '0');
-        const day = pad(d.getDate());
-        const month = pad(d.getMonth() + 1);
-        const year = String(d.getFullYear()).slice(-2);
-        const hrs = pad(d.getHours());
-        const mins = pad(d.getMinutes());
-        return `${day}.${month}.${year} ${hrs}:${mins}`;
-      }
-
-      // Если текст вводится класс error не работает - для валидации
-      nameInput.addEventListener('input', () => {
-        nameInput.classList.remove('error');
-      });
-      commentInput.addEventListener('input', () => {
-        commentInput.classList.remove('error');
-      });
-
-      // Заменяем опасные символы чтобы отображать их в виде текста
-      function safeSymbol(text) {
-        return text
-          .replaceAll('&', '&amp;')
-          .replaceAll('<', '&lt;')
-          .replaceAll('>', '&gt;')
-          .replaceAll('"', '&quot;')
-          .replaceAll("'", '&#39;');
-      }
-
-      // функция ркндера 
-      function renderComments() {
-        commentsList.innerHTML = comments
-          .map(
-            (comment, index) => `
-          <li class="comment" data-index="${index}">
-            <div class="comment-header">
-              <div>${comment.name}</div>
-              <div>${comment.date}</div>
-            </div>
-            <div class="comment-body">
-              <div class="comment-text">${comment.text}</div>
-            </div>
-            <div class="comment-footer">
-              <div class="likes">
-                <!-- Счётчик лайков берётся из массива -->
-                <span class="likes-counter">${comment.likes}</span>
-                <!-- Класс -active-like добавляется условно через булевое значение -->
-                <button 
-                  class="like-button ${comment.isLiked ? '-active-like' : ''}" 
-                  type="button">
-                </button>
-              </div>
-            </div>
-          </li>
-        `
-          )
-          .join('');
-
-        // После перерисовки навешиваем слушатели на каждую кнопку лайка
-        document.querySelectorAll('.like-button').forEach((button, index) => {
-          button.addEventListener('click', event => {
-            event.stopPropagation(); // остановка всплатия или провала
-            toggleLike(index);
-          });
-        });
-
-        // Добавим обработчик события на коммент
-        document.querySelectorAll('.comment').forEach(commentEl => {
-          commentEl.addEventListener('click', () => {
-            const i = commentEl.dataset.index;
-            const clicked = comments[i];
-            // добавим ">"
-            commentInput.value = `> ${clicked.text}\n${clicked.name}, `;
-            nameInput.focus();
-          });
-        });
-      }
-
-      // После каждого лайка вызываем рендер.
-      function toggleLike(index) {
-        const comment = comments[index];
-        // состояние лайка
-        comment.isLiked = !comment.isLiked;
-        // состояние счётчика
-        comment.likes += comment.isLiked ? 1 : -1;
-        renderComments();
-      }
-
-      // Новые комменты
-      addButton.addEventListener('click', () => {
-        // применяем функцию защиты от опасных символов в input
-        const name = safeSymbol(nameInput.value.trim());
-        const comment = safeSymbol(commentInput.value.trim());
-        // флаг ошибок
-        let hasError = false;
-
-        // Валидация
-        // Проверка наличия имени
-        if (!name) {
-          nameInput.value = '';
-          nameInput.placeholder = 'Введите имя!';
-          nameInput.classList.add('error'); // placeholder красный
-          hasError = true;
-        } else {
-          nameInput.classList.remove('error');
-          nameInput.placeholder = 'Введите ваше имя';
-        }
-
-        // Проверка наличия коммента
-        if (!comment) {
-          commentInput.value = '';
-          commentInput.placeholder = 'Введите комментарий!';
-          commentInput.classList.add('error'); // placeholder красный
-          hasError = true;
-        } else {
-          commentInput.classList.remove('error');
-          commentInput.placeholder = 'Введите ваш комментарий';
-        }
-
-        if (hasError) return; // останавливаем добавление
-
-        // Добавляем новый комментарий в массив данных
-        comments.push({
-          name,
-          date: formatDate(),
-          text: comment,
-          likes: 0,
-          isLiked: false,
-        });
-
-        // После добавления — перерендериваем весь список
-        renderComments();
-
-        // Очищаем поля ввода
-        nameInput.value = '';
-        commentInput.value = '';
-        nameInput.classList.remove('error');
-        commentInput.classList.remove('error');
-      });
-
-      // Первичный рендер загрузочный
-      renderComments();
-    });
-  </script>
 </html>

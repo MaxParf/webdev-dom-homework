@@ -1,14 +1,13 @@
 import { comments } from './comments.js'
 import { safeSymbol } from './safeSymbol.js'
 import { renderComments } from './renderComments.js'
+import { sendComment } from './api.js'
 
-// ДОБАВЛЕНИЕ НОВЫХ КОММЕНТАРИЕВ
-export function addComment(nameInput, commentInput) {
+export async function addComment(nameInput, commentInput) {
   const name = safeSymbol(nameInput.value.trim())
   const comment = safeSymbol(commentInput.value.trim())
   let hasError = false
 
-  // ВАЛИДАЦИЯ
   if (!name) {
     nameInput.value = ''
     nameInput.placeholder = 'Введите имя!'
@@ -31,20 +30,14 @@ export function addComment(nameInput, commentInput) {
 
   if (hasError) return
 
-  // ДОБАВЛЕНИЕ НОВОГО КОММЕНТАРИЯ В МАССИВ
-  const now = new Date()
-  const pad = (n) => String(n).padStart(2, '0')
-  const date = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${String(now.getFullYear()).slice(-2)} ${pad(now.getHours())}:${pad(now.getMinutes())}`
-
-  comments.push({
-    name,
-    date,
-    text: comment,
-    likes: 0,
-    isLiked: false,
-  })
-
-  renderComments()
+  try {
+    const newComment = await sendComment({ name, text: comment })
+    comments.push(newComment) // добавляем в локальный массив
+    renderComments()
+  } catch (error) {
+    console.error(error)
+    alert(error.message)
+  }
 
   nameInput.value = ''
   commentInput.value = ''

@@ -30,17 +30,30 @@ export async function addComment(nameInput, commentInput) {
 
   if (hasError) return
 
+  const formEl = document.querySelector('.add-form')
+  const sendingEl = document.querySelector('.comments-loading')
+
+  formEl.style.display = 'none'
+  sendingEl.textContent = 'Комментарий добавляется...'
+  sendingEl.classList.remove('hidden')
+
   try {
     const newComment = await sendComment({ name, text: comment })
-    comments.push(newComment) // добавляем в локальный массив
+    comments.push({
+      ...newComment,
+      isLiked: false,
+      isLikeLoading: false,
+    })
     renderComments()
   } catch (error) {
     console.error(error)
     alert(error.message)
+  } finally {
+    formEl.style.display = 'block'
+    sendingEl.classList.add('hidden')
+    nameInput.value = ''
+    commentInput.value = ''
+    nameInput.classList.remove('error')
+    commentInput.classList.remove('error')
   }
-
-  nameInput.value = ''
-  commentInput.value = ''
-  nameInput.classList.remove('error')
-  commentInput.classList.remove('error')
 }

@@ -1,12 +1,21 @@
 import { comments } from './comments.js'
 import { renderComments } from './renderComments.js'
+import { delay } from './delay.js'
 
-// ПОСЛЕ КАЖДОГО ЛАЙКА ВЫПОЛНЯЕТСЯ РЕНДЕР
 export function toggleLike(index) {
   const comment = comments[index]
-  // состояние лайка
-  comment.isLiked = !comment.isLiked
-  // изменение счётчика
-  comment.likes += comment.isLiked ? 1 : -1
+  if (comment.isLikeLoading) return
+
+  comment.isLikeLoading = true
   renderComments()
+
+  delay(700)
+    .then(() => {
+      comment.isLiked = !comment.isLiked
+      comment.likes = comment.isLiked ? comment.likes + 1 : comment.likes - 1
+    })
+    .finally(() => {
+      comment.isLikeLoading = false
+      renderComments()
+    })
 }

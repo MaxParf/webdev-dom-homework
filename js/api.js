@@ -1,35 +1,93 @@
+// API CONFIG
 const API_BASE = 'https://wedev-api.sky.pro/api/v1'
-const API_KEY = 'max-parf' // твой персональный ключ
+const API_KEY = 'max-parf'
 export const COMMENTS_URL = `${API_BASE}/${API_KEY}/comments`
 
-// GET — загрузка комментариев с сервера
-export async function loadComments() {
-  const response = await fetch(COMMENTS_URL)
+// КОНСТАНТЫ ОШИБОК
+export const OFFLINE_ERROR = 'OFFLINE_ERROR'
+export const VALIDATION_ERROR = 'VALIDATION_ERROR'
+export const BAD_REQUEST = 'BAD_REQUEST'
+export const SERVER_ERROR = 'SERVER_ERROR'
+export const UNKNOWN_ERROR = 'UNKNOWN_ERROR'
 
-  if (!response.ok) {
-    throw new Error('Ошибка загрузки комментариев с сервера')
+// УТИЛИТА RETRY ТОЛЬКО ДЛЯ 500
+async function requestWithRetry(requestFn, retries = 3) {
+  try {
+    return await requestFn()
+  } catch (error) {
+    // Повторяем только при ошибке сервера
+    if (error.message === SERVER_ERROR && retries > 0) {
+      return await requestWithRetry(requestFn, retries - 1)
+    }
+    throw error
   }
-
-  const data = await response.json()
-  return data.comments
 }
 
-// POST — добавление нового комментария
+// GET — загрузка комментариев
+export async function loadComments() {
+  try {
+    const response = await fetch(COMMENTS_URL)
+
+    if (!navigator.onLine) {
+      throw new Error(OFFLINE_ERROR)
+    }
+
+    if (response.status === 500) {
+      throw new Error(SERVER_ERROR)
+    }
+
+    if (!response.ok) {
+      throw new Error(UNKNOWN_ERROR)
+    }
+
+    const data = await response.json()
+    return data.comments
+  } catch (error) {
+    if (error.message === OFFLINE_ERROR) {
+      throw error
+    }
+    if (error.message === SERVER_ERROR) {
+      throw error
+    }
+    throw new Error(UNKNOWN_ERROR)
+  }
+}
+
+// POST — добавление комментария
 export async function sendComment({ name, text }) {
-  if (name.length < 3 || text.length < 3) {
-    throw new Error('Имя и текст должны быть не менее 3 символов')
-  }
+  return requestWithRetry(async () => {
+    let response
 
-  const response = await fetch(COMMENTS_URL, {
-    method: 'POST',
-    body: JSON.stringify({ name, text }),
+    try {
+      response = await fetch(COMMENTS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ name, text }),
+      })
+    } catch (e) {
+      console.warn('Network error:', e)
+      throw new Error(OFFLINE_ERROR)
+    }
+
+    // === Обработка статусов ===
+    if (response.status === 400) {
+      throw new Error(VALIDATION_ERROR)
+    }
+
+    if (response.status === 500) {
+      throw new Error(SERVER_ERROR)
+    }
+
+    if (!response.ok) {
+      throw new Error(UNKNOWN_ERROR)
+    }
+
+    // Возвращаем формат, который ожидает рендер
+    return {
+      name,
+      text,
+      date: new Date().toLocaleString(),
+      likes: 0,
+      isLiked: false,
+    }
   })
-
-  if (!response.ok) {
-    const err = await response.json()
-    throw new Error(err.error || 'Ошибка при добавлении комментария на сервер')
-  }
-
-  // возвращаем объект в формате фронтенда
-  return { name, text, date: new Date().toLocaleString(), likes: 0, isLiked: false }
 }

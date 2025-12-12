@@ -1,14 +1,15 @@
-import { initHandlers } from './initHandlers.js'
+import { loadUserFromLocalStorage, getUser } from './userState.js'
+import { renderMainPage } from './renderApp.js'
+import { fetchAndRenderMainPage } from './initHandlers.js'
 
 // ТОЧКА ВХОДА
 document.addEventListener('DOMContentLoaded', async () => {
-  const loadingEl = document.querySelector('.comments-loading')
-  loadingEl.textContent = 'Пожалуйста подождите комментарии загружаются...'
-  loadingEl.classList.remove('hidden')
+  // 1. Загрузка пользователя из LocalStorage
+  loadUserFromLocalStorage()
 
-  try {
-    await initHandlers() // загружаем и рендерим комментарии
-  } finally {
-    loadingEl.classList.add('hidden')
-  }
+  // 2. Рендеринг основной структуры (Показывает форму или ссылку)
+  renderMainPage(!!getUser())
+
+  // 3. Загрузка данных и финальный рендеринг списка
+  await fetchAndRenderMainPage()
 })
